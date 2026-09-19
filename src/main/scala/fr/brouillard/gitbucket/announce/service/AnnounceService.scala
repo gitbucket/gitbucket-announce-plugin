@@ -1,17 +1,28 @@
 package fr.brouillard.gitbucket.announce.service
 
+import javax.mail.internet.{AddressException, InternetAddress}
+
 import gitbucket.core.model.Profile.profile.blockingApi._
 import gitbucket.core.model.Account
 import gitbucket.core.model.Profile.{Accounts, GroupMembers}
 import gitbucket.core.service.AccountService
+import org.slf4j.LoggerFactory
 
 object EmailAddress {
-  private val EmailRegex = """\b[a-zA-Z0-9.!#$%&¡¯*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*\b""".r
-  def isValid(email: String): Boolean = EmailRegex.pattern.matcher(email.toUpperCase).matches()
+  // Uses InternetAddress, already used in GitBucket's mail-sending path (commons-email -> javax.mail).
+  def isValid(email: String): Boolean =
+    try {
+      new InternetAddress(email).validate()
+      true
+    } catch {
+      case _: AddressException => false
+    }
 }
 
 trait AnnounceService {
   self: AccountService =>
+
+  private val logger = LoggerFactory.getLogger(classOf[AnnounceService])
 
   def getAccountByGroupName(groupName: String)(implicit s: Session): List[Account] = {
     val needs = GroupMembers
@@ -38,8 +49,13 @@ trait AnnounceService {
       }
     }
     .flatten
-    .filter(mail => EmailAddress.isValid(mail))
     .distinct
-    .toList
+    .partition(EmailAddress.isValid) match {
+      case (validMails, invalidMails) =>
+        if (invalidMails.nonEmpty) {
+          logger.warn("skipping malformed email address(es): {}", invalidMails.mkString(", "))
+        }
+        validMails.toList
+    }
   }
 }

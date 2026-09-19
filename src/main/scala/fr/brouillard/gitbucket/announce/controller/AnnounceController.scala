@@ -64,17 +64,13 @@ trait AnnounceControllerBase extends ControllerBase {
           t.getCause match {
             case ex: SendFailedException => {
               logger.error("found invalid email address while sending notification", ex)
-              if (ex.getInvalidAddresses() != null) {
-                for (ia <- ex.getInvalidAddresses()) {
-                  logger.error("invalid email address: {}", ia.toString())
-                }
-              }
-              if (ex.getValidUnsentAddresses() != null) {
-                for (ua <- ex.getValidUnsentAddresses()) {
-                  logger.error("email not sent to: {}", ua.toString())
-                }
-              }
-              flash.update("info", "Announce has been sent.")
+              val invalidAddresses = Option(ex.getInvalidAddresses()).map(_.toList).getOrElse(Nil)
+              val unsentAddresses = Option(ex.getValidUnsentAddresses()).map(_.toList).getOrElse(Nil)
+              invalidAddresses.foreach(ia => logger.error("invalid email address: {}", ia.toString()))
+              unsentAddresses.foreach(ua => logger.error("email not sent to: {}", ua.toString()))
+              flash.update("info",
+                s"Announce has been sent, but ${invalidAddresses.size} address(es) were invalid and " +
+                  s"${unsentAddresses.size} address(es) were not sent. See server log for details.")
             }
             case _ => {
               logger.error("failure sending email", t)
