@@ -16,6 +16,7 @@ It is then possible, for example, to notify every user that an upgrade of the sy
 
 Plugin version | GitBucket version
 :--------------|:-----------------
+1.15.x         | 4.48.x
 1.14.x         | 4.35.x
 1.13.x         | 4.33.x
 1.12.x         | 4.32.x
@@ -41,6 +42,11 @@ Plugin version | GitBucket version
 - Restart GitBucket
 
 ## Release Notes
+
+### 1.15.0
+
+- update to gitbucket 4.48.0 (`adminOnly` with a form became `adminOnlyWithForm`); requires GitBucket 4.48.0 or later
+- [pullrequest-66](https://github.com/gitbucket/gitbucket-announce-plugin/pull/66) validate email addresses via `InternetAddress` instead of a hand-rolled regex
 
 ### 1.14.0
 
