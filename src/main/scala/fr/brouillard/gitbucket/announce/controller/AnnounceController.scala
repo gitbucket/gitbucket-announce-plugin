@@ -33,7 +33,7 @@ trait AnnounceControllerBase extends ControllerBase {
     html.announce(flash.get("info"))
   })
 
-  post("/admin/announce", announceForm)(adminOnly { form =>
+  post("/admin/announce", announceForm)(adminOnlyWithForm { form =>
     val systemSettings = context.settings
 
     if (systemSettings.useSMTP && systemSettings.smtp.nonEmpty) {
